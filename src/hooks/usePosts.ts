@@ -6,7 +6,7 @@ import {
   postQueryOptions,
   userPostsQueryOptions,
 } from "~/queries/posts";
-import { createPostFn } from "~/fn/posts";
+import { createPostFn, updatePostFn, deletePostFn } from "~/fn/posts";
 import { getErrorMessage } from "~/utils/error";
 
 // Query hooks
@@ -48,6 +48,56 @@ export function useCreatePost() {
     },
     onError: (error) => {
       toast.error("Failed to create post", {
+        description: getErrorMessage(error),
+      });
+    },
+  });
+}
+
+// Hook for updating posts
+export function useUpdatePost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: Parameters<typeof updatePostFn>[0]["data"]) =>
+      updatePostFn({ data }),
+    onSuccess: (updatedPost) => {
+      toast.success("Post updated successfully", {
+        description: "Your changes have been saved.",
+      });
+      // Invalidate all post-related queries
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["community-post", updatedPost.id],
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to update post", {
+        description: getErrorMessage(error),
+      });
+    },
+  });
+}
+
+// Hook for deleting posts
+export function useDeletePost() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: (id: string) => deletePostFn({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Post deleted successfully", {
+        description: "Your post has been removed from the community.",
+      });
+      // Invalidate all post-related queries
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["community-post"] });
+      // Navigate back to community page if on post detail page
+      navigate({ to: "/community" });
+    },
+    onError: (error) => {
+      toast.error("Failed to delete post", {
         description: getErrorMessage(error),
       });
     },

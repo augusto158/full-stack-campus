@@ -1,16 +1,28 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Home, Users, MessageSquare, Clock, User } from "lucide-react";
+import { useState } from "react";
+import {
+  Home,
+  Users,
+  MessageSquare,
+  Clock,
+  User,
+  Trash2,
+  Edit,
+} from "lucide-react";
 import { Page } from "~/components/Page";
 import { AppBreadcrumb } from "~/components/AppBreadcrumb";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Button } from "~/components/ui/button";
 import { postQueryOptions } from "~/queries/posts";
 import { formatRelativeTime } from "~/utils/song";
 import { getInitials } from "~/utils/user";
+import { authClient } from "~/lib/auth-client";
+import { DeletePostDialog } from "~/components/DeletePostDialog";
+import { UserAvatar } from "~/components/UserAvatar";
 
-export const Route = createFileRoute("/community/post/$postId")({
+export const Route = createFileRoute("/community/post/$postId/")({
   loader: async ({ context: { queryClient }, params: { postId } }) => {
     // Use prefetchQuery instead of ensureQueryData to avoid throwing on errors
     // The component will handle the error state
@@ -82,7 +94,15 @@ function getCategoryVariant(
 
 function PostDetail() {
   const { postId } = Route.useParams();
+  const navigate = useNavigate();
   const { data: post, isLoading, error } = useQuery(postQueryOptions(postId));
+  const { data: session } = authClient.useSession();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const isOwner = session?.user?.id === post?.userId;
+
+  const handleEditClick = () => {
+    navigate({ to: `/community/post/$postId/edit`, params: { postId } });
+  };
 
   const breadcrumbItems = [
     { label: "Home", href: "/", icon: Home },
@@ -135,43 +155,70 @@ function PostDetail() {
         {/* Main Post */}
         <Card>
           <CardHeader className="space-y-4">
-            {/* Category Badge */}
-            {post.category && (
-              <div>
-                <Badge variant={getCategoryVariant(post.category)}>
-                  {post.category}
-                </Badge>
-              </div>
-            )}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 space-y-4">
+                {/* Category Badge */}
+                {post.category && (
+                  <div>
+                    <Badge variant={getCategoryVariant(post.category)}>
+                      {post.category}
+                    </Badge>
+                  </div>
+                )}
 
-            {/* Title */}
-            {post.title && (
-              <h1 className="text-3xl font-bold">{post.title}</h1>
-            )}
+                {/* Title */}
+                {post.title && (
+                  <h1 className="text-3xl font-bold">{post.title}</h1>
+                )}
 
-            {/* Author and Timestamp */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  {post.user.image ? (
-                    <AvatarImage src={post.user.image} alt={post.user.name || "User"} />
-                  ) : null}
-                  <AvatarFallback>
-                    {getInitials(post.user.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium">{post.user.name || "Anonymous"}</p>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>
-                      {formatRelativeTime(
-                        new Date(post.createdAt).toISOString()
-                      )}
-                    </span>
+                {/* Author and Timestamp */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <UserAvatar
+                      imageKey={post.user.image}
+                      name={post.user.name}
+                      size="md"
+                    />
+                    <div>
+                      <p className="font-medium">
+                        {post.user.name || "Anonymous"}
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                          {formatRelativeTime(
+                            new Date(post.createdAt).toISOString()
+                          )}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Action Buttons */}
+              {isOwner && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hover:bg-accent"
+                    onClick={handleEditClick}
+                    title="Edit post"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    title="Delete post"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </CardHeader>
 
@@ -199,17 +246,12 @@ function PostDetail() {
               <Card key={reply.id}>
                 <CardContent className="pt-6">
                   <div className="flex gap-4">
-                    <Avatar className="h-8 w-8 shrink-0">
-                      {reply.user.image ? (
-                        <AvatarImage
-                          src={reply.user.image}
-                          alt={reply.user.name}
-                        />
-                      ) : null}
-                      <AvatarFallback className="text-xs">
-                        {getInitials(reply.user.name)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                      imageKey={reply.user.image}
+                      name={reply.user.name}
+                      size="sm"
+                      className="shrink-0"
+                    />
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">
@@ -237,6 +279,15 @@ function PostDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Delete Post Dialog */}
+        {post && (
+          <DeletePostDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            post={post}
+          />
+        )}
       </div>
     </Page>
   );

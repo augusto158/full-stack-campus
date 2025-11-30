@@ -11,8 +11,7 @@ import {
   List,
   Music,
   ListMusic,
-  Upload,
-  PenSquare,
+  Users,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useUserAvatar } from "~/hooks/useUserAvatar";
@@ -29,16 +28,11 @@ import { useState } from "react";
 import * as React from "react";
 import { usePlaylist } from "./playlist-provider";
 
-const navigationLinks = [
-  {
-    title: "Home",
-    href: "/",
-  },
-  {
-    title: "Browse",
-    href: "/browse",
-  },
-];
+const communityLink = {
+  title: "Community",
+  href: "/community",
+  icon: Users,
+};
 
 interface HeaderProps {
   onOpenPlaylist?: () => void;
@@ -68,70 +62,25 @@ export function Header({ onOpenPlaylist }: HeaderProps = {}) {
           </Link>
 
           <nav className="hidden md:flex items-center gap-2 text-sm">
-            {navigationLinks.map((link) => {
-              const isActive = currentPath === link.href || (link.href === "/" && currentPath === "/");
-              return (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className={`relative px-4 py-2 rounded-lg transition-all duration-200 group ${
-                    isActive 
-                      ? "text-foreground" 
-                      : "text-foreground/70 hover:text-foreground"
-                  }`}
-                >
-                  <span className="relative z-10">{link.title}</span>
-                  <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                    isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  }`}></span>
-                  <span className={`absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 ${
-                    isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  }`}></span>
-                </Link>
-              );
-            })}
-            {session && (
-              <>
-                <Link
-                  to="/upload"
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 group ${
-                    currentPath === "/upload"
-                      ? "text-foreground"
-                      : "text-foreground/70 hover:text-foreground"
-                  }`}
-                >
-                  <Upload className={`h-4 w-4 relative z-10 transition-transform ${
-                    currentPath === "/upload" ? "scale-110" : "group-hover:scale-110"
-                  }`} />
-                  <span className="relative z-10">Upload</span>
-                  <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                    currentPath === "/upload" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  }`}></span>
-                  <span className={`absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 ${
-                    currentPath === "/upload" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  }`}></span>
-                </Link>
-                <Link
-                  to="/community/create-post"
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 group ${
-                    currentPath === "/community/create-post"
-                      ? "text-foreground"
-                      : "text-foreground/70 hover:text-foreground"
-                  }`}
-                >
-                  <PenSquare className={`h-4 w-4 relative z-10 transition-transform ${
-                    currentPath === "/community/create-post" ? "scale-110" : "group-hover:scale-110"
-                  }`} />
-                  <span className="relative z-10">Create Post</span>
-                  <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                    currentPath === "/community/create-post" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  }`}></span>
-                  <span className={`absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 ${
-                    currentPath === "/community/create-post" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  }`}></span>
-                </Link>
-              </>
-            )}
+            <Link
+              to={communityLink.href}
+              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 group ${
+                currentPath === communityLink.href || currentPath.startsWith("/community")
+                  ? "text-foreground"
+                  : "text-foreground/70 hover:text-foreground"
+              }`}
+            >
+              <Users className={`h-4 w-4 relative z-10 transition-transform ${
+                currentPath === communityLink.href || currentPath.startsWith("/community") ? "scale-110" : "group-hover:scale-110"
+              }`} />
+              <span className="relative z-10">{communityLink.title}</span>
+              <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
+                currentPath === communityLink.href || currentPath.startsWith("/community") ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              }`}></span>
+              <span className={`absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 ${
+                currentPath === communityLink.href || currentPath.startsWith("/community") ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              }`}></span>
+            </Link>
           </nav>
         </div>
 
@@ -157,92 +106,23 @@ export function Header({ onOpenPlaylist }: HeaderProps = {}) {
                 <span className="font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Full Stack Campus</span>
               </Link>
               <nav className="flex flex-col gap-2 mt-6">
-                {navigationLinks.map((link) => {
-                  const isActive = currentPath === link.href || (link.href === "/" && currentPath === "/");
-                  return (
-                    <Link
-                      key={link.href}
-                      to={link.href}
-                      className={`relative block px-4 py-2.5 rounded-lg text-lg transition-all duration-200 group ${
-                        isActive
-                          ? "text-foreground"
-                          : "text-foreground/70 hover:text-foreground"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <span className="relative z-10">{link.title}</span>
-                      <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                        isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                      }`}></span>
-                    </Link>
-                  );
-                })}
-                {session && (
-                  <>
-                    <Link
-                      to="/upload"
-                      className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-lg transition-all duration-200 group ${
-                        currentPath === "/upload"
-                          ? "text-foreground"
-                          : "text-foreground/70 hover:text-foreground"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Upload className={`h-5 w-5 relative z-10 transition-transform ${
-                        currentPath === "/upload" ? "scale-110" : "group-hover:scale-110"
-                      }`} />
-                      <span className="relative z-10">Upload</span>
-                      <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                        currentPath === "/upload" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                      }`}></span>
-                    </Link>
-                    <Link
-                      to="/my-songs"
-                      className={`relative block px-4 py-2.5 rounded-lg text-lg transition-all duration-200 group ${
-                        currentPath === "/my-songs"
-                          ? "text-foreground"
-                          : "text-foreground/70 hover:text-foreground"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <span className="relative z-10">My Songs</span>
-                      <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                        currentPath === "/my-songs" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                      }`}></span>
-                    </Link>
-                    <Link
-                      to="/playlists"
-                      className={`relative block px-4 py-2.5 rounded-lg text-lg transition-all duration-200 group ${
-                        currentPath === "/playlists"
-                          ? "text-foreground"
-                          : "text-foreground/70 hover:text-foreground"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <span className="relative z-10">My Playlists</span>
-                      <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                        currentPath === "/playlists" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                      }`}></span>
-                    </Link>
-                    <Link
-                      to="/community/create-post"
-                      className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-lg transition-all duration-200 group ${
-                        currentPath === "/community/create-post"
-                          ? "text-foreground"
-                          : "text-foreground/70 hover:text-foreground"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <PenSquare className={`h-5 w-5 relative z-10 transition-transform ${
-                        currentPath === "/community/create-post" ? "scale-110" : "group-hover:scale-110"
-                      }`} />
-                      <span className="relative z-10">Create Post</span>
-                      <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                        currentPath === "/community/create-post" ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                      }`}></span>
-                    </Link>
-                  </>
-                )}
+                <Link
+                  to={communityLink.href}
+                  className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-lg transition-all duration-200 group ${
+                    currentPath === communityLink.href || currentPath.startsWith("/community")
+                      ? "text-foreground"
+                      : "text-foreground/70 hover:text-foreground"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Users className={`h-5 w-5 relative z-10 transition-transform ${
+                    currentPath === communityLink.href || currentPath.startsWith("/community") ? "scale-110" : "group-hover:scale-110"
+                  }`} />
+                  <span className="relative z-10">{communityLink.title}</span>
+                  <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
+                    currentPath === communityLink.href || currentPath.startsWith("/community") ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  }`}></span>
+                </Link>
               </nav>
             </div>
           </SheetContent>

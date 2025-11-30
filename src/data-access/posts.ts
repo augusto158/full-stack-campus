@@ -104,3 +104,46 @@ export async function findPostsByUserId(
     .where(eq(communityPost.userId, userId))
     .orderBy(desc(communityPost.createdAt));
 }
+
+export async function updatePost(
+  postId: string,
+  data: {
+    title?: string | null;
+    content: string;
+    category?: string;
+  }
+): Promise<CommunityPost | null> {
+  // Get existing post to preserve category if not provided
+  const existingPost = await findPostById(postId);
+  if (!existingPost) {
+    return null;
+  }
+
+  // Update the post
+  const [updated] = await database
+    .update(communityPost)
+    .set({
+      title: data.title || null,
+      content: data.content,
+      category: data.category || existingPost.category,
+      updatedAt: new Date(),
+    })
+    .where(eq(communityPost.id, postId))
+    .returning();
+
+  return updated || null;
+}
+
+export async function deletePost(postId: string): Promise<boolean> {
+  // Soft delete by setting deletedAt timestamp
+  const [updated] = await database
+    .update(communityPost)
+    .set({
+      deletedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(communityPost.id, postId))
+    .returning();
+
+  return updated !== undefined;
+}

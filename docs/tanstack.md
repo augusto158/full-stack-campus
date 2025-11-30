@@ -268,7 +268,7 @@ export function useCreateSong() {
       createSongFn({ data }),
     onSuccess: (song) => {
       toast.success("Song created successfully!");
-      navigate({ to: `/song/${song.id}` });
+      navigate({ to: `/song/$songId`, params: { songId: song.id } });
     },
     onError: (error) => {
       toast.error("Failed to create song");

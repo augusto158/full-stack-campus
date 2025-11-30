@@ -22,9 +22,10 @@ import { Route as CommunityIndexRouteImport } from './routes/community/index'
 import { Route as CommunityCreatePostRouteImport } from './routes/community/create-post'
 import { Route as SongIdIndexRouteImport } from './routes/song/$id/index'
 import { Route as SongIdEditRouteImport } from './routes/song/$id/edit'
-import { Route as CommunityPostPostIdRouteImport } from './routes/community/post/$postId'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as CommunityPostPostIdIndexRouteImport } from './routes/community/post/$postId/index'
+import { Route as CommunityPostPostIdEditRouteImport } from './routes/community/post/$postId/edit'
 
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
@@ -91,11 +92,6 @@ const SongIdEditRoute = SongIdEditRouteImport.update({
   path: '/song/$id/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CommunityPostPostIdRoute = CommunityPostPostIdRouteImport.update({
-  id: '/community/post/$postId',
-  path: '/community/post/$postId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe/webhook',
   path: '/api/stripe/webhook',
@@ -104,6 +100,17 @@ const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityPostPostIdIndexRoute =
+  CommunityPostPostIdIndexRouteImport.update({
+    id: '/community/post/$postId/',
+    path: '/community/post/$postId/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CommunityPostPostIdEditRoute = CommunityPostPostIdEditRouteImport.update({
+  id: '/community/post/$postId/edit',
+  path: '/community/post/$postId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -121,9 +128,10 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
-  '/community/post/$postId': typeof CommunityPostPostIdRoute
   '/song/$id/edit': typeof SongIdEditRoute
   '/song/$id': typeof SongIdIndexRoute
+  '/community/post/$postId/edit': typeof CommunityPostPostIdEditRoute
+  '/community/post/$postId': typeof CommunityPostPostIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -139,9 +147,10 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
-  '/community/post/$postId': typeof CommunityPostPostIdRoute
   '/song/$id/edit': typeof SongIdEditRoute
   '/song/$id': typeof SongIdIndexRoute
+  '/community/post/$postId/edit': typeof CommunityPostPostIdEditRoute
+  '/community/post/$postId': typeof CommunityPostPostIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -158,9 +167,10 @@ export interface FileRoutesById {
   '/community/': typeof CommunityIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
-  '/community/post/$postId': typeof CommunityPostPostIdRoute
   '/song/$id/edit': typeof SongIdEditRoute
   '/song/$id/': typeof SongIdIndexRoute
+  '/community/post/$postId/edit': typeof CommunityPostPostIdEditRoute
+  '/community/post/$postId/': typeof CommunityPostPostIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,9 +188,10 @@ export interface FileRouteTypes {
     | '/community'
     | '/api/auth/$'
     | '/api/stripe/webhook'
-    | '/community/post/$postId'
     | '/song/$id/edit'
     | '/song/$id'
+    | '/community/post/$postId/edit'
+    | '/community/post/$postId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -196,9 +207,10 @@ export interface FileRouteTypes {
     | '/community'
     | '/api/auth/$'
     | '/api/stripe/webhook'
-    | '/community/post/$postId'
     | '/song/$id/edit'
     | '/song/$id'
+    | '/community/post/$postId/edit'
+    | '/community/post/$postId'
   id:
     | '__root__'
     | '/'
@@ -214,9 +226,10 @@ export interface FileRouteTypes {
     | '/community/'
     | '/api/auth/$'
     | '/api/stripe/webhook'
-    | '/community/post/$postId'
     | '/song/$id/edit'
     | '/song/$id/'
+    | '/community/post/$postId/edit'
+    | '/community/post/$postId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -233,9 +246,10 @@ export interface RootRouteChildren {
   CommunityIndexRoute: typeof CommunityIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
-  CommunityPostPostIdRoute: typeof CommunityPostPostIdRoute
   SongIdEditRoute: typeof SongIdEditRoute
   SongIdIndexRoute: typeof SongIdIndexRoute
+  CommunityPostPostIdEditRoute: typeof CommunityPostPostIdEditRoute
+  CommunityPostPostIdIndexRoute: typeof CommunityPostPostIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -331,13 +345,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SongIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/community/post/$postId': {
-      id: '/community/post/$postId'
-      path: '/community/post/$postId'
-      fullPath: '/community/post/$postId'
-      preLoaderRoute: typeof CommunityPostPostIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/stripe/webhook': {
       id: '/api/stripe/webhook'
       path: '/api/stripe/webhook'
@@ -350,6 +357,20 @@ declare module '@tanstack/react-router' {
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community/post/$postId/': {
+      id: '/community/post/$postId/'
+      path: '/community/post/$postId'
+      fullPath: '/community/post/$postId'
+      preLoaderRoute: typeof CommunityPostPostIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community/post/$postId/edit': {
+      id: '/community/post/$postId/edit'
+      path: '/community/post/$postId/edit'
+      fullPath: '/community/post/$postId/edit'
+      preLoaderRoute: typeof CommunityPostPostIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -369,9 +390,10 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityIndexRoute: CommunityIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
-  CommunityPostPostIdRoute: CommunityPostPostIdRoute,
   SongIdEditRoute: SongIdEditRoute,
   SongIdIndexRoute: SongIdIndexRoute,
+  CommunityPostPostIdEditRoute: CommunityPostPostIdEditRoute,
+  CommunityPostPostIdIndexRoute: CommunityPostPostIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
