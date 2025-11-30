@@ -12,6 +12,7 @@ import {
   Music,
   ListMusic,
   Users,
+  UserCircle,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useUserAvatar } from "~/hooks/useUserAvatar";
@@ -32,6 +33,12 @@ const communityLink = {
   title: "Community",
   href: "/community",
   icon: Users,
+};
+
+const membersLink = {
+  title: "Members",
+  href: "/members",
+  icon: UserCircle,
 };
 
 interface HeaderProps {
@@ -65,21 +72,72 @@ export function Header({ onOpenPlaylist }: HeaderProps = {}) {
             <Link
               to={communityLink.href}
               className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 group ${
-                currentPath === communityLink.href || currentPath.startsWith("/community")
+                currentPath === communityLink.href ||
+                currentPath.startsWith("/community")
                   ? "text-foreground"
                   : "text-foreground/70 hover:text-foreground"
               }`}
             >
-              <Users className={`h-4 w-4 relative z-10 transition-transform ${
-                currentPath === communityLink.href || currentPath.startsWith("/community") ? "scale-110" : "group-hover:scale-110"
-              }`} />
+              <Users
+                className={`h-4 w-4 relative z-10 transition-transform ${
+                  currentPath === communityLink.href ||
+                  currentPath.startsWith("/community")
+                    ? "scale-110"
+                    : "group-hover:scale-110"
+                }`}
+              />
               <span className="relative z-10">{communityLink.title}</span>
-              <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                currentPath === communityLink.href || currentPath.startsWith("/community") ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-              }`}></span>
-              <span className={`absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 ${
-                currentPath === communityLink.href || currentPath.startsWith("/community") ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-              }`}></span>
+              <span
+                className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
+                  currentPath === communityLink.href ||
+                  currentPath.startsWith("/community")
+                    ? "opacity-100"
+                    : "opacity-0 group-hover:opacity-100"
+                }`}
+              ></span>
+              <span
+                className={`absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 ${
+                  currentPath === communityLink.href ||
+                  currentPath.startsWith("/community")
+                    ? "opacity-100"
+                    : "opacity-0 group-hover:opacity-100"
+                }`}
+              ></span>
+            </Link>
+            <Link
+              to={membersLink.href}
+              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 group ${
+                currentPath === membersLink.href ||
+                currentPath.startsWith("/members")
+                  ? "text-foreground"
+                  : "text-foreground/70 hover:text-foreground"
+              }`}
+            >
+              <UserCircle
+                className={`h-4 w-4 relative z-10 transition-transform ${
+                  currentPath === membersLink.href ||
+                  currentPath.startsWith("/members")
+                    ? "scale-110"
+                    : "group-hover:scale-110"
+                }`}
+              />
+              <span className="relative z-10">{membersLink.title}</span>
+              <span
+                className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
+                  currentPath === membersLink.href ||
+                  currentPath.startsWith("/members")
+                    ? "opacity-100"
+                    : "opacity-0 group-hover:opacity-100"
+                }`}
+              ></span>
+              <span
+                className={`absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-purple-600/10 blur-sm transition-opacity duration-200 ${
+                  currentPath === membersLink.href ||
+                  currentPath.startsWith("/members")
+                    ? "opacity-100"
+                    : "opacity-0 group-hover:opacity-100"
+                }`}
+              ></span>
             </Link>
           </nav>
         </div>
@@ -103,25 +161,66 @@ export function Header({ onOpenPlaylist }: HeaderProps = {}) {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <Code className="h-6 w-6 text-primary" />
-                <span className="font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Full Stack Campus</span>
+                <span className="font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                  Full Stack Campus
+                </span>
               </Link>
               <nav className="flex flex-col gap-2 mt-6">
                 <Link
                   to={communityLink.href}
                   className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-lg transition-all duration-200 group ${
-                    currentPath === communityLink.href || currentPath.startsWith("/community")
+                    currentPath === communityLink.href ||
+                    currentPath.startsWith("/community")
                       ? "text-foreground"
                       : "text-foreground/70 hover:text-foreground"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Users className={`h-5 w-5 relative z-10 transition-transform ${
-                    currentPath === communityLink.href || currentPath.startsWith("/community") ? "scale-110" : "group-hover:scale-110"
-                  }`} />
+                  <Users
+                    className={`h-5 w-5 relative z-10 transition-transform ${
+                      currentPath === communityLink.href ||
+                      currentPath.startsWith("/community")
+                        ? "scale-110"
+                        : "group-hover:scale-110"
+                    }`}
+                  />
                   <span className="relative z-10">{communityLink.title}</span>
-                  <span className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
-                    currentPath === communityLink.href || currentPath.startsWith("/community") ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  }`}></span>
+                  <span
+                    className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
+                      currentPath === communityLink.href ||
+                      currentPath.startsWith("/community")
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100"
+                    }`}
+                  ></span>
+                </Link>
+                <Link
+                  to={membersLink.href}
+                  className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-lg transition-all duration-200 group ${
+                    currentPath === membersLink.href ||
+                    currentPath.startsWith("/members")
+                      ? "text-foreground"
+                      : "text-foreground/70 hover:text-foreground"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <UserCircle
+                    className={`h-5 w-5 relative z-10 transition-transform ${
+                      currentPath === membersLink.href ||
+                      currentPath.startsWith("/members")
+                        ? "scale-110"
+                        : "group-hover:scale-110"
+                    }`}
+                  />
+                  <span className="relative z-10">{membersLink.title}</span>
+                  <span
+                    className={`absolute inset-0 rounded-lg bg-primary/5 transition-opacity duration-200 ${
+                      currentPath === membersLink.href ||
+                      currentPath.startsWith("/members")
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100"
+                    }`}
+                  ></span>
                 </Link>
               </nav>
             </div>

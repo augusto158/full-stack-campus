@@ -17,6 +17,7 @@ import { EmptyState } from "~/components/EmptyState";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { recentPostsQueryOptions } from "~/queries/posts";
+import { postCommentCountQueryOptions } from "~/queries/comments";
 import { formatRelativeTime } from "~/utils/song";
 import type { PostWithUser } from "~/data-access/posts";
 import { authClient } from "~/lib/auth-client";
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/community/")({
 
 function PostCard({ post }: { post: PostWithUser }) {
   const { data: session } = authClient.useSession();
+  const { data: commentCount = 0 } = useQuery(postCommentCountQueryOptions(post.id));
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const isOwner = session?.user?.id === post.userId;
 
@@ -113,23 +115,29 @@ function PostCard({ post }: { post: PostWithUser }) {
                 {truncateContent(post.content)}
               </p>
 
-              <div className="flex items-center gap-2 flex-wrap">
-                {post.category && (
-                  <Badge
-                    variant="outline"
-                    className={`text-xs capitalize ${getCategoryColor(post.category)}`}
-                  >
-                    {post.category}
-                  </Badge>
-                )}
-                {post.isQuestion && (
-                  <Badge
-                    variant="outline"
-                    className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
-                  >
-                    Question
-                  </Badge>
-                )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {post.category && (
+                    <Badge
+                      variant="outline"
+                      className={`text-xs capitalize ${getCategoryColor(post.category)}`}
+                    >
+                      {post.category}
+                    </Badge>
+                  )}
+                  {post.isQuestion && (
+                    <Badge
+                      variant="outline"
+                      className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                    >
+                      Question
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  <span>{commentCount}</span>
+                </div>
               </div>
             </div>
           </div>

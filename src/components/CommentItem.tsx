@@ -1,0 +1,165 @@
+import { useState } from "react";
+import { Clock, MessageSquare, Edit, Trash2 } from "lucide-react";
+import { Card, CardContent } from "~/components/ui/card";
+import { Button } from "~/components/ui/button";
+import { UserAvatar } from "~/components/UserAvatar";
+import { formatRelativeTime } from "~/utils/song";
+import type { CommentWithUser } from "~/data-access/comments";
+import { CommentForm } from "./CommentForm";
+import { useCommentReplies } from "~/hooks/useComments";
+import { EditCommentDialog } from "./EditCommentDialog";
+import { DeleteCommentDialog } from "./DeleteCommentDialog";
+
+interface CommentItemProps {
+  comment: CommentWithUser;
+  postId: string;
+  currentUserId?: string;
+  depth?: number;
+  maxDepth?: number;
+}
+
+export function CommentItem({
+  comment,
+  postId,
+  currentUserId,
+  depth = 0,
+  maxDepth = 3,
+}: CommentItemProps) {
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [showReplies, setShowReplies] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const { data: replies = [], isLoading: repliesLoading } = useCommentReplies(
+    comment.id,
+    showReplies
+  );
+
+  const isOwner = currentUserId === comment.userId;
+  const canReply = depth < maxDepth;
+  const hasReplies = replies.length > 0;
+  const isEdited =
+    comment.updatedAt &&
+    comment.createdAt &&
+    new Date(comment.updatedAt).getTime() -
+      new Date(comment.createdAt).getTime() >
+      1000;
+
+  return (
+    <div className={depth > 0 ? "ml-6 border-l-2 border-border pl-4" : ""}>
+      <Card>
+        <CardContent className="pt-4 pb-3">
+          <div className="flex gap-3">
+            <UserAvatar
+              imageKey={comment.user.image}
+              name={comment.user.name}
+              size="sm"
+              className="shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-medium text-sm">
+                  {comment.user.name || "Anonymous"}
+                </span>
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {formatRelativeTime(new Date(comment.createdAt).toISOString())}
+                </span>
+                {isEdited && (
+                  <span className="text-xs text-muted-foreground">(edited)</span>
+                )}
+              </div>
+              <p className="text-sm text-foreground mt-1 whitespace-pre-wrap break-words">
+                {comment.content}
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                {canReply && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowReplyForm(!showReplyForm)}
+                  >
+                    <MessageSquare className="h-3 w-3 mr-1" />
+                    Reply
+                  </Button>
+                )}
+                {isOwner && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setEditDialogOpen(true)}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-destructive hover:text-destructive"
+                      onClick={() => setDeleteDialogOpen(true)}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Delete
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Reply Form */}
+      {showReplyForm && (
+        <div className="mt-2 ml-6">
+          <CommentForm
+            postId={postId}
+            parentCommentId={comment.id}
+            placeholder={`Reply to ${comment.user.name}...`}
+            autoFocus
+            onSuccess={() => setShowReplyForm(false)}
+          />
+        </div>
+      )}
+
+      {/* Replies */}
+      {hasReplies && (
+        <div className="mt-2 space-y-2">
+          {repliesLoading ? (
+            <div className="ml-6 text-sm text-muted-foreground">
+              Loading replies...
+            </div>
+          ) : (
+            replies.map((reply) => (
+              <CommentItem
+                key={reply.id}
+                comment={reply}
+                postId={postId}
+                currentUserId={currentUserId}
+                depth={depth + 1}
+                maxDepth={maxDepth}
+              />
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Edit Dialog */}
+      <EditCommentDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        comment={comment}
+      />
+
+      {/* Delete Dialog */}
+      <DeleteCommentDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        comment={comment}
+      />
+    </div>
+  );
+}

@@ -4,9 +4,7 @@ import { useState } from "react";
 import {
   Home,
   Users,
-  MessageSquare,
   Clock,
-  User,
   Trash2,
   Edit,
 } from "lucide-react";
@@ -17,10 +15,10 @@ import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { postQueryOptions } from "~/queries/posts";
 import { formatRelativeTime } from "~/utils/song";
-import { getInitials } from "~/utils/user";
 import { authClient } from "~/lib/auth-client";
 import { DeletePostDialog } from "~/components/DeletePostDialog";
 import { UserAvatar } from "~/components/UserAvatar";
+import { CommentList } from "~/components/CommentList";
 
 export const Route = createFileRoute("/community/post/$postId/")({
   loader: async ({ context: { queryClient }, params: { postId } }) => {
@@ -31,53 +29,6 @@ export const Route = createFileRoute("/community/post/$postId/")({
   component: PostDetail,
 });
 
-// Placeholder replies data
-const PLACEHOLDER_REPLIES = [
-  {
-    id: "1",
-    content:
-      "This is a great discussion! I've been thinking about this topic for a while and I really appreciate you bringing it up.",
-    user: {
-      id: "user-1",
-      name: "Alex Johnson",
-      image: null,
-    },
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-  },
-  {
-    id: "2",
-    content:
-      "I agree with your points. Here's my perspective: we should consider the broader implications and how this affects the community as a whole.",
-    user: {
-      id: "user-2",
-      name: "Sarah Chen",
-      image: null,
-    },
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-  },
-  {
-    id: "3",
-    content:
-      "Has anyone tried implementing this approach? I'd love to hear about real-world experiences.",
-    user: {
-      id: "user-3",
-      name: "Mike Williams",
-      image: null,
-    },
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
-  },
-  {
-    id: "4",
-    content:
-      "Thanks for sharing this! I learned something new today. Looking forward to more discussions like this.",
-    user: {
-      id: "user-4",
-      name: "Emily Davis",
-      image: null,
-    },
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-  },
-];
 
 function getCategoryVariant(
   category: string | null
@@ -232,53 +183,8 @@ function PostDetail() {
           </CardContent>
         </Card>
 
-        {/* Replies Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-xl font-semibold">
-              Replies ({PLACEHOLDER_REPLIES.length})
-            </h2>
-          </div>
-
-          <div className="space-y-4">
-            {PLACEHOLDER_REPLIES.map((reply) => (
-              <Card key={reply.id}>
-                <CardContent className="pt-6">
-                  <div className="flex gap-4">
-                    <UserAvatar
-                      imageKey={reply.user.image}
-                      name={reply.user.name}
-                      size="sm"
-                      className="shrink-0"
-                    />
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">
-                          {reply.user.name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatRelativeTime(reply.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-foreground">{reply.content}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Placeholder for reply form */}
-          <Card className="border-dashed">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <User className="h-5 w-5" />
-                <p className="text-sm">Reply functionality coming soon...</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Comments Section */}
+        <CommentList postId={postId} />
 
         {/* Delete Post Dialog */}
         {post && (

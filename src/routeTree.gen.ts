@@ -16,11 +16,13 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PlaylistsRouteImport } from './routes/playlists'
 import { Route as MySongsRouteImport } from './routes/my-songs'
+import { Route as MembersRouteImport } from './routes/members'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CommunityIndexRouteImport } from './routes/community/index'
 import { Route as CommunityCreatePostRouteImport } from './routes/community/create-post'
 import { Route as SongIdIndexRouteImport } from './routes/song/$id/index'
+import { Route as ProfileUserIdIndexRouteImport } from './routes/profile/$userId/index'
 import { Route as SongIdEditRouteImport } from './routes/song/$id/edit'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -62,6 +64,11 @@ const MySongsRoute = MySongsRouteImport.update({
   path: '/my-songs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MembersRoute = MembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrowseRoute = BrowseRouteImport.update({
   id: '/browse',
   path: '/browse',
@@ -85,6 +92,11 @@ const CommunityCreatePostRoute = CommunityCreatePostRouteImport.update({
 const SongIdIndexRoute = SongIdIndexRouteImport.update({
   id: '/song/$id/',
   path: '/song/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileUserIdIndexRoute = ProfileUserIdIndexRouteImport.update({
+  id: '/profile/$userId/',
+  path: '/profile/$userId/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SongIdEditRoute = SongIdEditRouteImport.update({
@@ -117,6 +129,7 @@ const CommunityPostPostIdEditRoute = CommunityPostPostIdEditRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/members': typeof MembersRoute
   '/my-songs': typeof MySongsRoute
   '/playlists': typeof PlaylistsRoute
   '/settings': typeof SettingsRoute
@@ -129,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/song/$id/edit': typeof SongIdEditRoute
+  '/profile/$userId': typeof ProfileUserIdIndexRoute
   '/song/$id': typeof SongIdIndexRoute
   '/community/post/$postId/edit': typeof CommunityPostPostIdEditRoute
   '/community/post/$postId': typeof CommunityPostPostIdIndexRoute
@@ -136,6 +150,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/members': typeof MembersRoute
   '/my-songs': typeof MySongsRoute
   '/playlists': typeof PlaylistsRoute
   '/settings': typeof SettingsRoute
@@ -148,6 +163,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/song/$id/edit': typeof SongIdEditRoute
+  '/profile/$userId': typeof ProfileUserIdIndexRoute
   '/song/$id': typeof SongIdIndexRoute
   '/community/post/$postId/edit': typeof CommunityPostPostIdEditRoute
   '/community/post/$postId': typeof CommunityPostPostIdIndexRoute
@@ -156,6 +172,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/members': typeof MembersRoute
   '/my-songs': typeof MySongsRoute
   '/playlists': typeof PlaylistsRoute
   '/settings': typeof SettingsRoute
@@ -168,6 +185,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/song/$id/edit': typeof SongIdEditRoute
+  '/profile/$userId/': typeof ProfileUserIdIndexRoute
   '/song/$id/': typeof SongIdIndexRoute
   '/community/post/$postId/edit': typeof CommunityPostPostIdEditRoute
   '/community/post/$postId/': typeof CommunityPostPostIdIndexRoute
@@ -177,6 +195,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/browse'
+    | '/members'
     | '/my-songs'
     | '/playlists'
     | '/settings'
@@ -189,6 +208,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/stripe/webhook'
     | '/song/$id/edit'
+    | '/profile/$userId'
     | '/song/$id'
     | '/community/post/$postId/edit'
     | '/community/post/$postId'
@@ -196,6 +216,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/browse'
+    | '/members'
     | '/my-songs'
     | '/playlists'
     | '/settings'
@@ -208,6 +229,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/stripe/webhook'
     | '/song/$id/edit'
+    | '/profile/$userId'
     | '/song/$id'
     | '/community/post/$postId/edit'
     | '/community/post/$postId'
@@ -215,6 +237,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/browse'
+    | '/members'
     | '/my-songs'
     | '/playlists'
     | '/settings'
@@ -227,6 +250,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/stripe/webhook'
     | '/song/$id/edit'
+    | '/profile/$userId/'
     | '/song/$id/'
     | '/community/post/$postId/edit'
     | '/community/post/$postId/'
@@ -235,6 +259,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrowseRoute: typeof BrowseRoute
+  MembersRoute: typeof MembersRoute
   MySongsRoute: typeof MySongsRoute
   PlaylistsRoute: typeof PlaylistsRoute
   SettingsRoute: typeof SettingsRoute
@@ -247,6 +272,7 @@ export interface RootRouteChildren {
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   SongIdEditRoute: typeof SongIdEditRoute
+  ProfileUserIdIndexRoute: typeof ProfileUserIdIndexRoute
   SongIdIndexRoute: typeof SongIdIndexRoute
   CommunityPostPostIdEditRoute: typeof CommunityPostPostIdEditRoute
   CommunityPostPostIdIndexRoute: typeof CommunityPostPostIdIndexRoute
@@ -303,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MySongsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/members': {
+      id: '/members'
+      path: '/members'
+      fullPath: '/members'
+      preLoaderRoute: typeof MembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/browse': {
       id: '/browse'
       path: '/browse'
@@ -336,6 +369,13 @@ declare module '@tanstack/react-router' {
       path: '/song/$id'
       fullPath: '/song/$id'
       preLoaderRoute: typeof SongIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/$userId/': {
+      id: '/profile/$userId/'
+      path: '/profile/$userId'
+      fullPath: '/profile/$userId'
+      preLoaderRoute: typeof ProfileUserIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/song/$id/edit': {
@@ -379,6 +419,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrowseRoute: BrowseRoute,
+  MembersRoute: MembersRoute,
   MySongsRoute: MySongsRoute,
   PlaylistsRoute: PlaylistsRoute,
   SettingsRoute: SettingsRoute,
@@ -391,6 +432,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   SongIdEditRoute: SongIdEditRoute,
+  ProfileUserIdIndexRoute: ProfileUserIdIndexRoute,
   SongIdIndexRoute: SongIdIndexRoute,
   CommunityPostPostIdEditRoute: CommunityPostPostIdEditRoute,
   CommunityPostPostIdIndexRoute: CommunityPostPostIdIndexRoute,

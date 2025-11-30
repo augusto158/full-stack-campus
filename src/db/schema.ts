@@ -170,6 +170,25 @@ export const communityPost = pgTable("community_post", {
   deletedAt: timestamp("deleted_at"),
 });
 
+export const postComment = pgTable("post_comment", {
+  id: text("id").primaryKey(),
+  postId: text("post_id")
+    .notNull()
+    .references(() => communityPost.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  parentCommentId: text("parent_comment_id"),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  updatedAt: timestamp("updated_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+  deletedAt: timestamp("deleted_at"),
+});
+
 export const songRelations = relations(song, ({ one, many }) => ({
   user: one(user, {
     fields: [song.userId],
@@ -209,11 +228,29 @@ export const playlistSongRelations = relations(playlistSong, ({ one }) => ({
   }),
 }));
 
-export const communityPostRelations = relations(communityPost, ({ one }) => ({
+export const communityPostRelations = relations(communityPost, ({ one, many }) => ({
   user: one(user, {
     fields: [communityPost.userId],
     references: [user.id],
   }),
+  comments: many(postComment),
+}));
+
+export const postCommentRelations = relations(postComment, ({ one, many }) => ({
+  post: one(communityPost, {
+    fields: [postComment.postId],
+    references: [communityPost.id],
+  }),
+  user: one(user, {
+    fields: [postComment.userId],
+    references: [user.id],
+  }),
+  parentComment: one(postComment, {
+    fields: [postComment.parentCommentId],
+    references: [postComment.id],
+    relationName: "commentReplies",
+  }),
+  replies: many(postComment, { relationName: "commentReplies" }),
 }));
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -221,6 +258,7 @@ export const userRelations = relations(user, ({ many }) => ({
   hearts: many(heart),
   playlists: many(playlist),
   communityPosts: many(communityPost),
+  postComments: many(postComment),
 }));
 
 export type Song = typeof song.$inferSelect;
@@ -246,6 +284,12 @@ export type CommunityPost = typeof communityPost.$inferSelect;
 export type CreateCommunityPostData = typeof communityPost.$inferInsert;
 export type UpdateCommunityPostData = Partial<
   Omit<CreateCommunityPostData, "id" | "createdAt">
+>;
+
+export type PostComment = typeof postComment.$inferSelect;
+export type CreatePostCommentData = typeof postComment.$inferInsert;
+export type UpdatePostCommentData = Partial<
+  Omit<CreatePostCommentData, "id" | "createdAt" | "postId" | "userId">
 >;
 
 export type SubscriptionPlan = "free" | "basic" | "pro";
