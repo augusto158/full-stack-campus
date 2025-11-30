@@ -32,7 +32,7 @@ export const assertAdminMiddleware = createMiddleware({
   type: "function",
 }).server(async ({ next }) => {
   const userId = await getAuthenticatedUserId();
-  
+
   const adminCheck = await isUserAdmin(userId);
   if (!adminCheck) {
     throw new Error("Unauthorized: Only admins can perform this action");
