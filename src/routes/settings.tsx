@@ -82,8 +82,7 @@ function AccountDeletionSettings() {
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
               Permanently delete your account and all associated data. This
-              action cannot be undone. All your songs, playlists, and
-              subscription data will be permanently removed.
+              action cannot be undone. All your subscription data will be permanently removed.
             </p>
             <Button
               variant="destructive"
@@ -116,9 +115,7 @@ function AccountDeletionSettings() {
                 The following data will be permanently deleted:
               </p>
               <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1">
-                <li>All uploaded songs and audio files</li>
-                <li>All created playlists</li>
-                <li>All liked songs and hearts</li>
+                <li>All liked posts and hearts</li>
                 <li>Your subscription and billing information</li>
                 <li>Your profile and account settings</li>
               </ul>

@@ -9,7 +9,9 @@ import {
   findPostsByUserId,
   updatePost,
   deletePost,
+  pinPost,
 } from "~/data-access/posts";
+import { isUserAdmin } from "~/data-access/users";
 
 export const POST_CATEGORIES = [
   "general",
@@ -67,9 +69,16 @@ export const getPostByIdFn = createServerFn({
   });
 
 export const getRecentPostsFn = createServerFn()
+  .inputValidator(
+    z
+      .object({
+        category: z.enum(POST_CATEGORIES).optional(),
+      })
+      .optional()
+  )
   .middleware([authenticatedMiddleware])
-  .handler(async () => {
-    return await findRecentPosts(20);
+  .handler(async ({ data }) => {
+    return await findRecentPosts(20, data?.category);
   });
 
 export const getUserPostsFn = createServerFn()
@@ -150,4 +159,47 @@ export const deletePostFn = createServerFn({
     }
 
     return { success: true };
+  });
+
+export const pinPostFn = createServerFn({
+  method: "POST",
+})
+  .inputValidator(
+    z.object({
+      id: z.string(),
+      isPinned: z.boolean(),
+    })
+  )
+  .middleware([authenticatedMiddleware])
+  .handler(async ({ data, context }) => {
+    const { id, isPinned } = data;
+
+    // Verify user is admin
+    const isAdmin = await isUserAdmin(context.userId);
+    if (!isAdmin) {
+      throw new Error("Unauthorized: Only admins can pin posts");
+    }
+
+    // Check if the post exists
+    const existingPost = await findPostById(id);
+    if (!existingPost) {
+      throw new Error("Post not found");
+    }
+
+    // Pin/unpin the post
+    const updatedPost = await pinPost(id, isPinned);
+    if (!updatedPost) {
+      throw new Error("Failed to update post pin status");
+    }
+
+    return updatedPost;
+  });
+
+export const checkIsAdminFn = createServerFn({
+  method: "GET",
+})
+  .middleware([authenticatedMiddleware])
+  .handler(async ({ context }) => {
+    const isAdmin = await isUserAdmin(context.userId);
+    return { isAdmin };
   });

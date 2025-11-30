@@ -1,4 +1,4 @@
-import { eq, desc, isNull } from "drizzle-orm";
+import { eq, desc, isNull, and } from "drizzle-orm";
 import { database } from "~/db";
 import {
   communityPost,
@@ -66,8 +66,13 @@ export async function findPostByIdWithUser(
 }
 
 export async function findRecentPosts(
-  limit: number = 20
+  limit: number = 20,
+  category?: string
 ): Promise<PostWithUser[]> {
+  const whereConditions = category
+    ? and(isNull(communityPost.deletedAt), eq(communityPost.category, category))
+    : isNull(communityPost.deletedAt);
+
   const results = await database
     .select({
       id: communityPost.id,
@@ -88,8 +93,8 @@ export async function findRecentPosts(
     })
     .from(communityPost)
     .innerJoin(user, eq(communityPost.userId, user.id))
-    .where(isNull(communityPost.deletedAt))
-    .orderBy(desc(communityPost.createdAt))
+    .where(whereConditions)
+    .orderBy(desc(communityPost.isPinned), desc(communityPost.createdAt))
     .limit(limit);
 
   return results;
@@ -146,4 +151,20 @@ export async function deletePost(postId: string): Promise<boolean> {
     .returning();
 
   return updated !== undefined;
+}
+
+export async function pinPost(
+  postId: string,
+  isPinned: boolean
+): Promise<CommunityPost | null> {
+  const [updated] = await database
+    .update(communityPost)
+    .set({
+      isPinned,
+      updatedAt: new Date(),
+    })
+    .where(eq(communityPost.id, postId))
+    .returning();
+
+  return updated || null;
 }

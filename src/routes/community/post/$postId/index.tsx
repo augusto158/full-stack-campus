@@ -7,6 +7,8 @@ import {
   Clock,
   Trash2,
   Edit,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { Page } from "~/components/Page";
 import { AppBreadcrumb } from "~/components/AppBreadcrumb";
@@ -19,6 +21,10 @@ import { authClient } from "~/lib/auth-client";
 import { DeletePostDialog } from "~/components/DeletePostDialog";
 import { UserAvatar } from "~/components/UserAvatar";
 import { CommentList } from "~/components/CommentList";
+import { useIsAdmin, usePinPost } from "~/hooks/usePosts";
+import { PostLikeButton } from "~/components/PostLikeButton";
+import { MediaGallery } from "~/components/MediaGallery";
+import { usePostAttachments } from "~/hooks/useAttachments";
 
 export const Route = createFileRoute("/community/post/$postId/")({
   loader: async ({ context: { queryClient }, params: { postId } }) => {
@@ -49,15 +55,25 @@ function PostDetail() {
   const { data: post, isLoading, error } = useQuery(postQueryOptions(postId));
   const { data: session } = authClient.useSession();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { data: adminData } = useIsAdmin();
+  const pinPost = usePinPost();
+  const { data: attachments = [] } = usePostAttachments(postId);
   const isOwner = session?.user?.id === post?.userId;
+  const isAdmin = adminData?.isAdmin ?? false;
 
   const handleEditClick = () => {
     navigate({ to: `/community/post/$postId/edit`, params: { postId } });
   };
 
+  const handlePinClick = () => {
+    if (post) {
+      pinPost.mutate({ id: post.id, isPinned: !post.isPinned });
+    }
+  };
+
   const breadcrumbItems = [
-    { label: "Home", href: "/", icon: Home },
-    { label: "Community", href: "/community", icon: Users },
+    { label: "Home", href: "/" },
+    { label: "Community", href: "/community", search: { category: undefined }, icon: Users },
     { label: post?.title || "Post" },
   ];
 
@@ -88,6 +104,7 @@ function PostDetail() {
           </p>
           <Link
             to="/community"
+            search={{ category: undefined }}
             className="text-primary hover:underline inline-flex items-center gap-2"
           >
             <Users className="h-4 w-4" />
@@ -108,14 +125,20 @@ function PostDetail() {
           <CardHeader className="space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 space-y-4">
-                {/* Category Badge */}
-                {post.category && (
-                  <div>
+                {/* Category and Pinned Badges */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {post.category && (
                     <Badge variant={getCategoryVariant(post.category)}>
                       {post.category}
                     </Badge>
-                  </div>
-                )}
+                  )}
+                  {post.isPinned && (
+                    <Badge variant="secondary" className="gap-1">
+                      <Pin className="h-3 w-3" />
+                      Pinned
+                    </Badge>
+                  )}
+                </div>
 
                 {/* Title */}
                 {post.title && (
@@ -148,37 +171,71 @@ function PostDetail() {
               </div>
 
               {/* Action Buttons */}
-              {isOwner && (
+              {(isOwner || isAdmin) && (
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:bg-accent"
-                    onClick={handleEditClick}
-                    title="Edit post"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => setDeleteDialogOpen(true)}
-                    title="Delete post"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`${post.isPinned ? "text-primary hover:text-primary" : ""} hover:bg-accent`}
+                      onClick={handlePinClick}
+                      disabled={pinPost.isPending}
+                      title={post.isPinned ? "Unpin post" : "Pin post"}
+                    >
+                      {post.isPinned ? (
+                        <PinOff className="h-4 w-4" />
+                      ) : (
+                        <Pin className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
+                  {isOwner && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-accent"
+                        onClick={handleEditClick}
+                        title="Edit post"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => setDeleteDialogOpen(true)}
+                        title="Delete post"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="space-y-4">
             {/* Post Content */}
             <div className="prose prose-neutral dark:prose-invert max-w-none">
               <p className="whitespace-pre-wrap text-foreground leading-relaxed">
                 {post.content}
               </p>
+            </div>
+
+            {/* Post Attachments */}
+            {attachments.length > 0 && (
+              <MediaGallery
+                attachments={attachments}
+                size="lg"
+                className="mt-4"
+              />
+            )}
+
+            {/* Like Button */}
+            <div className="pt-2 border-t border-border">
+              <PostLikeButton postId={post.id} />
             </div>
           </CardContent>
         </Card>

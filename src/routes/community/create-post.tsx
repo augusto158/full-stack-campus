@@ -4,7 +4,7 @@ import { useCreatePost } from "~/hooks/usePosts";
 import { Page } from "~/components/Page";
 import { PageTitle } from "~/components/PageTitle";
 import { AppBreadcrumb } from "~/components/AppBreadcrumb";
-import { PostForm, type PostFormData } from "~/components/PostForm";
+import { PostForm, type PostFormDataWithAttachments } from "~/components/PostForm";
 
 export const Route = createFileRoute("/community/create-post")({
   component: CreatePost,
@@ -14,12 +14,12 @@ function CreatePost() {
   const navigate = useNavigate();
   const createPostMutation = useCreatePost();
 
-  const onSubmit = (data: PostFormData) => {
+  const onSubmit = (data: PostFormDataWithAttachments) => {
     createPostMutation.mutate(data);
   };
 
   const handleCancel = () => {
-    navigate({ to: "/community" });
+    navigate({ to: "/community", search: { category: undefined } });
   };
 
   return (
@@ -27,7 +27,7 @@ function CreatePost() {
       <div className="space-y-8">
         <AppBreadcrumb
           items={[
-            { label: "Community", href: "/community", icon: Users },
+            { label: "Community", href: "/community", search: { category: undefined }, icon: Users },
             { label: "Create Post" },
           ]}
         />

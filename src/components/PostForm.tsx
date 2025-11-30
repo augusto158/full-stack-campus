@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, MessageSquarePlus, Save } from "lucide-react";
+import { useState } from "react";
+import { Loader2, MessageSquarePlus, Save, ImagePlus, X } from "lucide-react";
 import { POST_CATEGORIES } from "~/fn/posts";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -22,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { MediaDropzone } from "~/components/MediaDropzone";
+import type { MediaUploadResult } from "~/utils/storage/media-helpers";
 
 export const postFormSchema = z.object({
   title: z
@@ -37,6 +40,10 @@ export const postFormSchema = z.object({
 });
 
 export type PostFormData = z.infer<typeof postFormSchema>;
+
+export interface PostFormDataWithAttachments extends PostFormData {
+  attachments: MediaUploadResult[];
+}
 
 export const CATEGORY_LABELS: Record<(typeof POST_CATEGORIES)[number], string> =
   {
@@ -62,12 +69,13 @@ export const CATEGORY_DESCRIPTIONS: Record<
 
 interface PostFormProps {
   defaultValues?: Partial<PostFormData>;
-  onSubmit: (data: PostFormData) => void | Promise<void>;
+  onSubmit: (data: PostFormDataWithAttachments) => void | Promise<void>;
   isPending?: boolean;
   submitLabel?: string;
   submitIcon?: React.ReactNode;
   onCancel?: () => void;
   cancelLabel?: string;
+  showMediaUpload?: boolean;
 }
 
 export function PostForm({
@@ -78,7 +86,11 @@ export function PostForm({
   submitIcon = <MessageSquarePlus className="h-4 w-4 mr-2" />,
   onCancel,
   cancelLabel = "Cancel",
+  showMediaUpload = true,
 }: PostFormProps) {
+  const [uploadedMedia, setUploadedMedia] = useState<MediaUploadResult[]>([]);
+  const [showDropzone, setShowDropzone] = useState(false);
+
   const form = useForm<PostFormData>({
     resolver: zodResolver(postFormSchema),
     defaultValues: {
@@ -89,8 +101,19 @@ export function PostForm({
     },
   });
 
+  const handleUploadsComplete = (results: MediaUploadResult[]) => {
+    setUploadedMedia((prev) => [...prev, ...results]);
+  };
+
+  const removeUploadedMedia = (id: string) => {
+    setUploadedMedia((prev) => prev.filter((m) => m.id !== id));
+  };
+
   const handleSubmit = async (data: PostFormData) => {
-    await onSubmit(data);
+    await onSubmit({
+      ...data,
+      attachments: uploadedMedia,
+    });
   };
 
   return (
@@ -176,6 +199,78 @@ export function PostForm({
             </FormItem>
           )}
         />
+
+        {/* Media Upload Section */}
+        {showMediaUpload && (
+          <div className="space-y-3">
+            {/* Uploaded Media Preview */}
+            {uploadedMedia.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Attached Media ({uploadedMedia.length})</p>
+                <div className="flex flex-wrap gap-2">
+                  {uploadedMedia.map((media) => (
+                    <div
+                      key={media.id}
+                      className="relative group w-20 h-20 rounded-lg overflow-hidden bg-muted"
+                    >
+                      {media.type === "video" ? (
+                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                          <span className="text-xs text-muted-foreground">Video</span>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">Image</span>
+                        </div>
+                      )}
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeUploadedMedia(media.id)}
+                        disabled={isPending}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Toggle dropzone button or dropzone */}
+            {!showDropzone ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowDropzone(true)}
+                disabled={isPending}
+              >
+                <ImagePlus className="h-4 w-4 mr-2" />
+                Add Images or Videos
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <MediaDropzone
+                  onUploadsComplete={handleUploadsComplete}
+                  maxFiles={10 - uploadedMedia.length}
+                  disabled={isPending}
+                />
+                {uploadedMedia.length === 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDropzone(false)}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-col gap-4 pt-4 border-t border-border">
           <div className="flex gap-3">

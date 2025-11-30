@@ -7,8 +7,11 @@ import { formatRelativeTime } from "~/utils/song";
 import type { CommentWithUser } from "~/data-access/comments";
 import { CommentForm } from "./CommentForm";
 import { useCommentReplies } from "~/hooks/useComments";
+import { useCommentAttachments } from "~/hooks/useAttachments";
 import { EditCommentDialog } from "./EditCommentDialog";
 import { DeleteCommentDialog } from "./DeleteCommentDialog";
+import { CommentLikeButton } from "./CommentLikeButton";
+import { MediaGallery } from "./MediaGallery";
 
 interface CommentItemProps {
   comment: CommentWithUser;
@@ -34,6 +37,7 @@ export function CommentItem({
     comment.id,
     showReplies
   );
+  const { data: attachments = [] } = useCommentAttachments(comment.id);
 
   const isOwner = currentUserId === comment.userId;
   const canReply = depth < maxDepth;
@@ -72,7 +76,18 @@ export function CommentItem({
               <p className="text-sm text-foreground mt-1 whitespace-pre-wrap break-words">
                 {comment.content}
               </p>
+              {/* Comment Attachments */}
+              {attachments.length > 0 && (
+                <div className="mt-2">
+                  <MediaGallery
+                    attachments={attachments}
+                    size="sm"
+                    maxVisible={4}
+                  />
+                </div>
+              )}
               <div className="flex items-center gap-2 mt-2">
+                <CommentLikeButton commentId={comment.id} size="sm" />
                 {canReply && (
                   <Button
                     variant="ghost"

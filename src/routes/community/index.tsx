@@ -7,6 +7,7 @@ import {
   Plus,
   MessageSquare,
   Pin,
+  PinOff,
   Trash2,
   Edit,
 } from "lucide-react";
@@ -23,20 +24,43 @@ import type { PostWithUser } from "~/data-access/posts";
 import { authClient } from "~/lib/auth-client";
 import { DeletePostDialog } from "~/components/DeletePostDialog";
 import { UserAvatar } from "~/components/UserAvatar";
+import { CategoryFilter } from "~/components/CategoryFilter";
+import { POST_CATEGORIES, type PostCategory } from "~/fn/posts";
+import { useIsAdmin, usePinPost } from "~/hooks/usePosts";
+import { PostLikeButton } from "~/components/PostLikeButton";
+import { MediaGallery } from "~/components/MediaGallery";
+import { usePostAttachments } from "~/hooks/useAttachments";
 
 export const Route = createFileRoute("/community/")({
-  loader: ({ context }) => {
+  validateSearch: (search: Record<string, unknown>) => {
+    const category = search.category as string | undefined;
+    return {
+      category: category && POST_CATEGORIES.includes(category as PostCategory)
+        ? (category as PostCategory)
+        : undefined,
+    };
+  },
+  loaderDeps: ({ search: { category } }) => ({ category }),
+  loader: ({ context, deps: { category } }) => {
     const { queryClient } = context;
-    queryClient.ensureQueryData(recentPostsQueryOptions());
+    queryClient.ensureQueryData(recentPostsQueryOptions(category));
   },
   component: Community,
 });
 
-function PostCard({ post }: { post: PostWithUser }) {
+function PostCard({ post, isAdmin }: { post: PostWithUser; isAdmin: boolean }) {
   const { data: session } = authClient.useSession();
   const { data: commentCount = 0 } = useQuery(postCommentCountQueryOptions(post.id));
+  const { data: attachments = [] } = usePostAttachments(post.id);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const pinPost = usePinPost();
   const isOwner = session?.user?.id === post.userId;
+
+  const handlePinClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    pinPost.mutate({ id: post.id, isPinned: !post.isPinned });
+  };
 
   const getCategoryColor = (category: string | null) => {
     switch (category) {
@@ -115,6 +139,17 @@ function PostCard({ post }: { post: PostWithUser }) {
                 {truncateContent(post.content)}
               </p>
 
+              {/* Post Attachments */}
+              {attachments.length > 0 && (
+                <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                  <MediaGallery
+                    attachments={attachments}
+                    size="sm"
+                    maxVisible={4}
+                  />
+                </div>
+              )}
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-wrap">
                   {post.category && (
@@ -134,35 +169,58 @@ function PostCard({ post }: { post: PostWithUser }) {
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-1 text-muted-foreground text-xs">
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  <span>{commentCount}</span>
+                <div className="flex items-center gap-3">
+                  <PostLikeButton postId={post.id} size="sm" />
+                  <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span>{commentCount}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </Link>
 
-        {isOwner && (
+        {(isOwner || isAdmin) && (
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0 hover:bg-accent"
-              onClick={handleEditClick}
-              title="Edit post"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={handleDeleteClick}
-              title="Delete post"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {isAdmin && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className={`h-8 w-8 p-0 ${post.isPinned ? "text-primary hover:text-primary" : ""} hover:bg-accent`}
+                onClick={handlePinClick}
+                disabled={pinPost.isPending}
+                title={post.isPinned ? "Unpin post" : "Pin post"}
+              >
+                {post.isPinned ? (
+                  <PinOff className="h-4 w-4" />
+                ) : (
+                  <Pin className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+            {isOwner && (
+              <>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 hover:bg-accent"
+                  onClick={handleEditClick}
+                  title="Edit post"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={handleDeleteClick}
+                  title="Delete post"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
         )}
       </article>
@@ -208,7 +266,25 @@ function PostListSkeleton({ count = 5 }: { count?: number }) {
 }
 
 function Community() {
-  const { data: posts, isLoading } = useQuery(recentPostsQueryOptions());
+  const { category } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const { data: posts, isLoading } = useQuery(recentPostsQueryOptions(category));
+  const { data: adminData } = useIsAdmin();
+  const isAdmin = adminData?.isAdmin ?? false;
+
+  const handleCategoryChange = (newCategory: PostCategory | undefined) => {
+    navigate({
+      to: "/community",
+      search: { category: newCategory },
+    });
+  };
+
+  const getEmptyStateMessage = () => {
+    if (category) {
+      return `No posts found in the "${category}" category. Try selecting a different category or create a new post.`;
+    }
+    return "Be the first to share something with the community. Start a discussion, ask a question, or showcase your work.";
+  };
 
   return (
     <Page>
@@ -236,6 +312,11 @@ function Community() {
           </Button>
         </div>
 
+        <CategoryFilter
+          selectedCategory={category}
+          onCategoryChange={handleCategoryChange}
+        />
+
         <section className="space-y-4" aria-labelledby="posts-heading">
           <h2 id="posts-heading" className="sr-only">
             Community Posts
@@ -246,14 +327,14 @@ function Community() {
           ) : posts && posts.length > 0 ? (
             <div className="space-y-4">
               {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
+                <PostCard key={post.id} post={post} isAdmin={isAdmin} />
               ))}
             </div>
           ) : (
             <EmptyState
               icon={<MessageSquare className="h-10 w-10 text-primary/60" />}
-              title="No posts yet"
-              description="Be the first to share something with the community. Start a discussion, ask a question, or showcase your work."
+              title={category ? `No ${category} posts` : "No posts yet"}
+              description={getEmptyStateMessage()}
               actionLabel="Create First Post"
               onAction={() => {
                 window.location.href = "/community/create-post";

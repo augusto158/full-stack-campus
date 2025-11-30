@@ -5,14 +5,17 @@ import {
   recentPostsQueryOptions,
   postQueryOptions,
   userPostsQueryOptions,
+  isAdminQueryOptions,
 } from "~/queries/posts";
-import { createPostFn, updatePostFn, deletePostFn } from "~/fn/posts";
+import { createPostFn, updatePostFn, deletePostFn, pinPostFn, type PostCategory } from "~/fn/posts";
+import { savePostAttachmentsFn } from "~/fn/attachments";
 import { getErrorMessage } from "~/utils/error";
+import type { MediaUploadResult } from "~/utils/storage/media-helpers";
 
 // Query hooks
-export function useRecentPosts(enabled = true) {
+export function useRecentPosts(category?: PostCategory, enabled = true) {
   return useQuery({
-    ...recentPostsQueryOptions(),
+    ...recentPostsQueryOptions(category),
     enabled,
   });
 }
@@ -31,20 +34,58 @@ export function useUserPosts(enabled = true) {
   });
 }
 
+export function useIsAdmin(enabled = true) {
+  return useQuery({
+    ...isAdminQueryOptions(),
+    enabled,
+  });
+}
+
 // Mutation hooks
+interface CreatePostData {
+  title?: string;
+  content: string;
+  category?: PostCategory;
+  attachments?: MediaUploadResult[];
+}
+
 export function useCreatePost() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: (data: Parameters<typeof createPostFn>[0]["data"]) =>
-      createPostFn({ data }),
+    mutationFn: async (data: CreatePostData) => {
+      const { attachments, ...postData } = data;
+
+      // Create the post
+      const newPost = await createPostFn({ data: postData });
+
+      // If there are attachments, save them
+      if (attachments && attachments.length > 0) {
+        await savePostAttachmentsFn({
+          data: {
+            postId: newPost.id,
+            attachments: attachments.map((att, index) => ({
+              id: att.id,
+              fileKey: att.fileKey,
+              fileName: att.fileName,
+              fileSize: att.fileSize,
+              mimeType: att.mimeType,
+              type: att.type,
+              position: index,
+            })),
+          },
+        });
+      }
+
+      return newPost;
+    },
     onSuccess: () => {
       toast.success("Post created successfully!", {
         description: "Your post has been published to the community.",
       });
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
-      navigate({ to: "/community" });
+      navigate({ to: "/community", search: { category: undefined } });
     },
     onError: (error) => {
       toast.error("Failed to create post", {
@@ -94,10 +135,36 @@ export function useDeletePost() {
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
       queryClient.invalidateQueries({ queryKey: ["community-post"] });
       // Navigate back to community page if on post detail page
-      navigate({ to: "/community" });
+      navigate({ to: "/community", search: { category: undefined } });
     },
     onError: (error) => {
       toast.error("Failed to delete post", {
+        description: getErrorMessage(error),
+      });
+    },
+  });
+}
+
+// Hook for pinning/unpinning posts (admin only)
+export function usePinPost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { id: string; isPinned: boolean }) =>
+      pinPostFn({ data }),
+    onSuccess: (updatedPost) => {
+      const action = updatedPost.isPinned ? "pinned" : "unpinned";
+      toast.success(`Post ${action} successfully`, {
+        description: `The post has been ${action}.`,
+      });
+      // Invalidate all post-related queries
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["community-post", updatedPost.id],
+      });
+    },
+    onError: (error) => {
+      toast.error("Failed to update pin status", {
         description: getErrorMessage(error),
       });
     },

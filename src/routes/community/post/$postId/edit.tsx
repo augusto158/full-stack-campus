@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Home, Users, MessageSquare, Save } from "lucide-react";
+import { Users, MessageSquare, Save } from "lucide-react";
 import { useUpdatePost } from "~/hooks/usePosts";
 import { postQueryOptions } from "~/queries/posts";
 import { Page } from "~/components/Page";
 import { PageTitle } from "~/components/PageTitle";
 import { AppBreadcrumb } from "~/components/AppBreadcrumb";
-import { PostForm, type PostFormData } from "~/components/PostForm";
+import { PostForm, type PostFormDataWithAttachments } from "~/components/PostForm";
 import { authClient } from "~/lib/auth-client";
 import { POST_CATEGORIES, type PostCategory } from "~/fn/posts";
 
@@ -27,19 +27,22 @@ function EditPost() {
   const isOwner = session?.user?.id === post?.userId;
 
   const breadcrumbItems = [
-    { label: "Home", href: "/", icon: Home },
-    { label: "Community", href: "/community", icon: Users },
+    { label: "Home", href: "/" },
+    { label: "Community", href: "/community", search: { category: undefined }, icon: Users },
     { label: post?.title || "Post", href: `/community/post/${postId}` },
     { label: "Edit" },
   ];
 
-  const handleSubmit = async (data: PostFormData) => {
+  const handleSubmit = async (data: PostFormDataWithAttachments) => {
     if (!postId) return;
+
+    // For now, we don't handle attachment updates in edit mode
+    const { attachments, ...postData } = data;
 
     updatePostMutation.mutate(
       {
         id: postId,
-        ...data,
+        ...postData,
       },
       {
         onSuccess: () => {
@@ -80,6 +83,7 @@ function EditPost() {
           </p>
           <Link
             to="/community"
+            search={{ category: undefined }}
             className="text-primary hover:underline inline-flex items-center gap-2"
           >
             <Users className="h-4 w-4" />
@@ -137,6 +141,7 @@ function EditPost() {
             submitIcon={<Save className="h-4 w-4 mr-2" />}
             onCancel={handleCancel}
             cancelLabel="Cancel"
+            showMediaUpload={false}
           />
         </div>
       </div>

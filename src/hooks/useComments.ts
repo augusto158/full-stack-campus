@@ -10,7 +10,9 @@ import {
   updateCommentFn,
   deleteCommentFn,
 } from "~/fn/comments";
+import { saveCommentAttachmentsFn } from "~/fn/attachments";
 import { getErrorMessage } from "~/utils/error";
+import type { MediaUploadResult } from "~/utils/storage/media-helpers";
 
 // Query hooks
 export function usePostComments(postId: string, enabled = true) {
@@ -35,12 +37,43 @@ export function usePostCommentCount(postId: string, enabled = true) {
 }
 
 // Mutation hooks
+interface CreateCommentData {
+  postId: string;
+  content: string;
+  parentCommentId?: string;
+  attachments?: MediaUploadResult[];
+}
+
 export function useCreateComment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Parameters<typeof createCommentFn>[0]["data"]) =>
-      createCommentFn({ data }),
+    mutationFn: async (data: CreateCommentData) => {
+      const { attachments, ...commentData } = data;
+
+      // Create the comment
+      const newComment = await createCommentFn({ data: commentData });
+
+      // If there are attachments, save them
+      if (attachments && attachments.length > 0) {
+        await saveCommentAttachmentsFn({
+          data: {
+            commentId: newComment.id,
+            attachments: attachments.map((att, index) => ({
+              id: att.id,
+              fileKey: att.fileKey,
+              fileName: att.fileName,
+              fileSize: att.fileSize,
+              mimeType: att.mimeType,
+              type: att.type,
+              position: index,
+            })),
+          },
+        });
+      }
+
+      return newComment;
+    },
     onSuccess: (_, variables) => {
       toast.success("Comment posted successfully");
       // Invalidate comments list
@@ -57,6 +90,10 @@ export function useCreateComment() {
           queryKey: ["comment-replies", variables.parentCommentId],
         });
       }
+      // Invalidate comment attachments
+      queryClient.invalidateQueries({
+        queryKey: ["comment-attachments"],
+      });
     },
     onError: (error) => {
       toast.error("Failed to post comment", {

@@ -189,6 +189,42 @@ export const postComment = pgTable("post_comment", {
   deletedAt: timestamp("deleted_at"),
 });
 
+export const postReaction = pgTable("post_reaction", {
+  id: text("id").primaryKey(),
+  postId: text("post_id").references(() => communityPost.id, {
+    onDelete: "cascade",
+  }),
+  commentId: text("comment_id").references(() => postComment.id, {
+    onDelete: "cascade",
+  }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  type: text("type").$default(() => "like"),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const postAttachment = pgTable("post_attachment", {
+  id: text("id").primaryKey(),
+  postId: text("post_id").references(() => communityPost.id, {
+    onDelete: "cascade",
+  }),
+  commentId: text("comment_id").references(() => postComment.id, {
+    onDelete: "cascade",
+  }),
+  type: text("type").notNull(), // 'image', 'video'
+  fileKey: text("file_key").notNull(), // R2 storage key
+  fileName: text("file_name"),
+  fileSize: integer("file_size"),
+  mimeType: text("mime_type"),
+  position: integer("position").$default(() => 0).notNull(),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
 export const songRelations = relations(song, ({ one, many }) => ({
   user: one(user, {
     fields: [song.userId],
@@ -234,6 +270,8 @@ export const communityPostRelations = relations(communityPost, ({ one, many }) =
     references: [user.id],
   }),
   comments: many(postComment),
+  reactions: many(postReaction),
+  attachments: many(postAttachment),
 }));
 
 export const postCommentRelations = relations(postComment, ({ one, many }) => ({
@@ -251,6 +289,34 @@ export const postCommentRelations = relations(postComment, ({ one, many }) => ({
     relationName: "commentReplies",
   }),
   replies: many(postComment, { relationName: "commentReplies" }),
+  reactions: many(postReaction),
+  attachments: many(postAttachment),
+}));
+
+export const postAttachmentRelations = relations(postAttachment, ({ one }) => ({
+  post: one(communityPost, {
+    fields: [postAttachment.postId],
+    references: [communityPost.id],
+  }),
+  comment: one(postComment, {
+    fields: [postAttachment.commentId],
+    references: [postComment.id],
+  }),
+}));
+
+export const postReactionRelations = relations(postReaction, ({ one }) => ({
+  post: one(communityPost, {
+    fields: [postReaction.postId],
+    references: [communityPost.id],
+  }),
+  comment: one(postComment, {
+    fields: [postReaction.commentId],
+    references: [postComment.id],
+  }),
+  user: one(user, {
+    fields: [postReaction.userId],
+    references: [user.id],
+  }),
 }));
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -259,6 +325,7 @@ export const userRelations = relations(user, ({ many }) => ({
   playlists: many(playlist),
   communityPosts: many(communityPost),
   postComments: many(postComment),
+  postReactions: many(postReaction),
 }));
 
 export type Song = typeof song.$inferSelect;
@@ -291,6 +358,14 @@ export type CreatePostCommentData = typeof postComment.$inferInsert;
 export type UpdatePostCommentData = Partial<
   Omit<CreatePostCommentData, "id" | "createdAt" | "postId" | "userId">
 >;
+
+export type PostReaction = typeof postReaction.$inferSelect;
+export type CreatePostReactionData = typeof postReaction.$inferInsert;
+
+export type PostAttachment = typeof postAttachment.$inferSelect;
+export type CreatePostAttachmentData = typeof postAttachment.$inferInsert;
+
+export type AttachmentType = "image" | "video";
 
 export type SubscriptionPlan = "free" | "basic" | "pro";
 export type SubscriptionStatus = "active" | "canceled" | "past_due" | "unpaid" | "incomplete";

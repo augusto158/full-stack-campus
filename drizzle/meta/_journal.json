@@ -71,6 +71,20 @@
       "when": 1764514633978,
       "tag": "0009_narrow_saracen",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1764516048071,
+      "tag": "0010_sour_rage",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1764516166125,
+      "tag": "0011_talented_chameleon",
+      "breakpoints": true
     }
   ]
 }

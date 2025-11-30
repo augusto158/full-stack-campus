@@ -11,6 +11,7 @@ import {
 interface BreadcrumbItem {
   label: string;
   href?: string;
+  search?: Record<string, unknown>;
   icon?: React.ComponentType<{ className?: string }>;
 }
 
@@ -39,7 +40,11 @@ export function AppBreadcrumb({ items }: AppBreadcrumbProps) {
                   </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
-                    <Link to={item.href!} className="flex items-center gap-2">
+                    <Link
+                      to={item.href!}
+                      search={item.search as never}
+                      className="flex items-center gap-2"
+                    >
                       {item.icon && <item.icon className="h-4 w-4" />}
                       {item.label}
                     </Link>
